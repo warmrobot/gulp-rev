@@ -40,7 +40,7 @@ function getManifestFile(opts, cb) {
 	});
 }
 
-function transformFilename(file, options) {
+function transformFilename(file) {
 	// save the old path for later
 	file.revOrigPath = file.path;
 	file.revOrigBase = file.base;
@@ -48,10 +48,6 @@ function transformFilename(file, options) {
 
 	file.path = modifyFilename(file.path, function (filename, extension) {
 		var extIndex = filename.indexOf('.');
-
-		if (options.rename && typeof options.rename === 'function') {
-			filename = options.rename(extIndex === -1 ? filename : filename.slice(0, extIndex));
-		}
 
 		filename = extIndex === -1 ?
 			revPath(filename, file.revHash) :
@@ -61,7 +57,7 @@ function transformFilename(file, options) {
 	});
 }
 
-var plugin = function (options) {
+var plugin = function () {
 	var sourcemaps = [];
 	var pathMap = {};
 
@@ -84,7 +80,7 @@ var plugin = function (options) {
 		}
 
 		var oldPath = file.path;
-		transformFilename(file, options);
+		transformFilename(file);
 		pathMap[oldPath] = file.revHash;
 
 		cb(null, file);

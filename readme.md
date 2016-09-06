@@ -77,6 +77,19 @@ Default: `JSON`
 An object with `parse` and `stringify` methods. This can be used to provide a
 custom transformer instead of the default `JSON` for the manifest file.
 
+##### insert
+
+Type: `function`
+Default:
+
+	function (manifest, file) {
+		var revisionedFile = relPath(file.base, file.path);
+		var originalFile = path.join(path.dirname(revisionedFile), path.basename(file.revOrigPath)).replace(/\\/g, '/');
+
+		manifest[originalFile] = revisionedFile;
+	}
+
+Function that add 'orig:reved' pair to manifest JSON
 
 ### Original path
 

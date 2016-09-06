@@ -164,6 +164,50 @@ it('should sort the rev manifest keys', function (cb) {
 	stream.end();
 });
 
+it('should build manifest file with addToManifest option', function (cb) {
+	function relPath(base, filePath) {
+		if (filePath.indexOf(base) !== 0) {
+			return filePath.replace(/\\/g, '/');
+		}
+
+		var newPath = filePath.substr(base.length).replace(/\\/g, '/');
+
+		if (newPath[0] === '/') {
+			return newPath.substr(1);
+		}
+
+		return newPath;
+	}
+
+	var stream = rev.manifest({
+		addToManifest: function (manifest, file) {
+			var revisionedFile = relPath(file.base, file.path);
+			var originalFile = relPath(file.revOrigBase, file.revOrigPath);
+
+			manifest[originalFile] = revisionedFile;
+		}
+	});
+
+	stream.on('data', function (newFile) {
+		assert.equal(newFile.relative, 'rev-manifest.json');
+		assert.deepEqual(
+			JSON.parse(newFile.contents.toString()),
+			{'css/unicorn.css': 'unicorn-d41d8cd98f.css'}
+		);
+		cb();
+	});
+
+	var file = new gutil.File({
+		path: 'unicorn-d41d8cd98f.css',
+		contents: new Buffer('')
+	});
+
+	file.revOrigPath = 'css/unicorn.css';
+
+	stream.write(file);
+	stream.end();
+});
+
 it('should respect directories', function (cb) {
 	var stream = rev.manifest();
 

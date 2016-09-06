@@ -116,6 +116,8 @@ var plugin = function () {
 };
 
 plugin.manifest = function (pth, opts) {
+	var manifest = {};
+
 	if (typeof pth === 'string') {
 		pth = {path: pth};
 	}
@@ -126,10 +128,14 @@ plugin.manifest = function (pth, opts) {
 		// Apply the default JSON transformer.
 		// The user can pass in his on transformer if he wants. The only requirement is that it should
 		// support 'parse' and 'stringify' methods.
-		transformer: JSON
-	}, opts, pth);
+		transformer: JSON,
+		insert: function (manifest, file) {
+			var revisionedFile = relPath(file.base, file.path);
+			var originalFile = path.join(path.dirname(revisionedFile), path.basename(file.revOrigPath)).replace(/\\/g, '/');
 
-	var manifest = {};
+			manifest[originalFile] = revisionedFile;
+		}
+	}, opts, pth);
 
 	return through.obj(function (file, enc, cb) {
 		// ignore all non-rev'd files
@@ -138,10 +144,7 @@ plugin.manifest = function (pth, opts) {
 			return;
 		}
 
-		var revisionedFile = relPath(file.base, file.path);
-		var originalFile = path.join(path.dirname(revisionedFile), path.basename(file.revOrigPath)).replace(/\\/g, '/');
-
-		manifest[originalFile] = revisionedFile;
+		opts.insert(manifest, file);
 
 		cb();
 	}, function (cb) {
